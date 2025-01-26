@@ -1,4 +1,4 @@
-# AI-Powered Data Analysis and Digital Twin Integration
+# AI-Powered Data Analysis using Multi-Agent Model
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
