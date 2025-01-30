@@ -84,6 +84,7 @@ The project will leverage the following technologies:
 ├── data/                        # Sample datasets
 │   ├── raw/                       # Raw data before processing
 │   ├── processed/                  # Cleaned data ready for analysis
+├── experiments/                  # Testing/Experimenting new code trails
 ├── notebooks/                    # Jupyter Notebooks for analysis
 ├── tests/                        # Unit tests for agents
 ├── docs/                         # Documentation
