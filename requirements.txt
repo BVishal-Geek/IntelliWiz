@@ -6,4 +6,5 @@ seaborn
 streamlit
 fastapi
 uvicorn
-
+missingno 
+pyarrow
