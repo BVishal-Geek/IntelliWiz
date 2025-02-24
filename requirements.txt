@@ -8,3 +8,10 @@ fastapi
 uvicorn
 missingno 
 pyarrow
+langgraph
+langchain 
+langchain-core
+pydantic
+llamaapi
+python-dotenv
+langchain-community
