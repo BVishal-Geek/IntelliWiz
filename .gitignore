@@ -1,3 +1,2 @@
 # Ignore the .env file 
-src/agents/.env
 __pycache__/
