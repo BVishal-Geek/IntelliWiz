@@ -1,17 +1,24 @@
 import pandas as pd
 import os
 from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.prebuilt import ToolNode
 from typing import Dict, Any, TypedDict, Optional
 from llamaapi import LlamaAPI
+import json
+import ast
 
 from analysis_agent import AnalysisAgent
-from visualization_agent import VisualizationAgent
+from visualization_tools import VisualizationTools
+from viz_agent import VizAgent
+
 
 # Define state type for the workflow
 class AnalysisState(TypedDict):
     df: pd.DataFrame
     analysis_result: str
     visualization_data: Optional[Dict[str, Any]]
+    messages: list
 
 def create_analysis_workflow(df: pd.DataFrame):
     
@@ -23,7 +30,7 @@ def create_analysis_workflow(df: pd.DataFrame):
     llama = LlamaAPI(api_key)
     
     analysis_agent = AnalysisAgent()
-    visualization_agent = VisualizationAgent()
+    
     
     # Define the analysis node that processes the dataframe and calls the API
     def analyze_node(state: AnalysisState):
@@ -54,23 +61,62 @@ def create_analysis_workflow(df: pd.DataFrame):
             
         return state
     
-    # Define the visualization node
-    def visualize_node(state: AnalysisState):
-        """Node: Create visualizations based on dataset."""
-        state["visualization_data"] = visualization_agent.create_visualization(state["df"])
+    # Define the suggest plots node
+    def suggest_plots_node(state: AnalysisState):
+        """Node: Get LLM-suggested visualizations."""
+        
+        visualization_agent = VizAgent()
+        prompt = visualization_agent.suggest_visual_columns(state["df"])
+        api_request = {
+            "model": "llama3.1-70b",
+            "messages": [
+                {"role": "system", "content": "You are an expert data analyst. Provide clear, actionable insights."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.5,
+            "max_tokens": 1500
+        }
+
+        try:
+            response = llama.run(api_request)
+            if response.status_code == 200:
+                content = response.json()["choices"][0]["message"]["content"]
+                state["visualization_data"] = {
+                    "success": True,
+                    "llm_visual_prompt_output": content
+                }
+                state["messages"] = [
+                    HumanMessage(content=prompt),
+                    AIMessage(content=content)
+                ]
+            else:
+                state["visualization_data"] = {
+                    "success": False,
+                    "message": f"❌ API Error: {response.status_code} - {response.text}"
+                }
+        except Exception as e:
+            state["visualization_data"] = {
+                "success": False,
+                "message": f"❌ Visualization generation failed: {str(e)}"
+            }
+
         return state
     
+    Visualization_Tools = VisualizationTools(df)
+
     # Define the graph
     graph = StateGraph(AnalysisState)
     
     # Add nodes
     graph.add_node("analyze_data", analyze_node)
-    graph.add_node("create_visualizations", visualize_node)
+    graph.add_node("suggest_plots", suggest_plots_node)
+    graph.add_node("visualization_tool", ToolNode(Visualization_Tools.get_tools()))
     
     # Define edges - sequential flow to avoid concurrent updates
     graph.add_edge(START, "analyze_data")
-    graph.add_edge("analyze_data", "create_visualizations")
-    graph.add_edge("create_visualizations", END)
+    graph.add_edge("analyze_data", "suggest_plots")
+    graph.add_edge("suggest_plots", "visualization_tool")
+    graph.add_edge("visualization_tool", END)
     
     # Compile the workflow
     workflow = graph.compile()
@@ -79,7 +125,8 @@ def create_analysis_workflow(df: pd.DataFrame):
         initial_state = {
             "df": df, 
             "analysis_result": "",
-            "visualization_data": None
+            "visualization_data": None,
+            "messages": []
         }
         result = workflow.invoke(initial_state)
         return {

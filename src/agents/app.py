@@ -4,7 +4,7 @@ import os
 import json
 import plotly.graph_objects as go
 from dotenv import load_dotenv
-from workflow import create_analysis_workflow
+import workflow as wf
 
 # Load environment variables
 load_dotenv()
@@ -43,7 +43,7 @@ def main():
             with st.spinner("Analyzing data with AI..."):
                 try:
                     # Create the analysis workflow with the dataframe
-                    analysis_runner = create_analysis_workflow(df)
+                    analysis_runner = wf.create_analysis_workflow(df)
                     
                     # Run the analysis workflow
                     results = analysis_runner()
@@ -56,41 +56,42 @@ def main():
                     
                     # Display visualizations if available
                     if visualization_data and visualization_data.get("success"):
-                        st.write("### Key Visualizations")
+                        st.write("#### LLM Visualization Suggestions")
+                        st.json(visualization_data["llm_visual_prompt_output"])
                         
-                        # Create tabs for multiple visualizations
-                        if len(visualization_data["plots"]) > 1:
-                            tabs = st.tabs([f"Visualization {i+1}" for i in range(len(visualization_data["plots"]))])
-                            
-                            for i, (tab, plot_data) in enumerate(zip(tabs, visualization_data["plots"])):
-                                with tab:
-                                    st.subheader(plot_data["title"])
-                                    
-                                    # Convert the JSON string back to a Plotly figure
-                                    fig_dict = json.loads(plot_data["figure"])
-                                    fig = go.Figure(fig_dict)
-                                    
-                                    # Display the figure
-                                    st.plotly_chart(fig, use_container_width=True)
-                                    
-                                    # Add insightful description
-                                    if "insight" in plot_data:
-                                        st.write(plot_data["insight"])
-                        else:
-                            # Single visualization
-                            plot_data = visualization_data["plots"][0]
-                            st.subheader(plot_data["title"])
-                            
-                            # Convert the JSON string back to a Plotly figure
-                            fig_dict = json.loads(plot_data["figure"])
-                            fig = go.Figure(fig_dict)
-                            
-                            # Display the figure
-                            st.plotly_chart(fig, use_container_width=True)
-                            
-                            # Add insightful description
-                            if "insight" in plot_data:
-                                st.write(plot_data["insight"])
+                        if visualization_data and visualization_data.get("plots"):
+                            if len(visualization_data["plots"]) > 1:
+                                tabs = st.tabs([f"Visualization {i+1}" for i in range(len(visualization_data["plots"]))])
+                                
+                                for i, (tab, plot_data) in enumerate(zip(tabs, visualization_data["plots"])):
+                                    with tab:
+                                        st.subheader(plot_data["title"])
+                                        
+                                        # Convert the JSON string back to a Plotly figure
+                                        fig_dict = json.loads(plot_data["figure"])
+                                        fig = go.Figure(fig_dict)
+                                        
+                                        # Display the figure
+                                        st.plotly_chart(fig, use_container_width=True)
+                                        
+                                        # Add insightful description
+                                        if "insight" in plot_data:
+                                            st.write(plot_data["insight"])
+                            else:
+                                # Single visualization
+                                plot_data = visualization_data["plots"][0]
+                                st.subheader(plot_data["title"])
+                                
+                                # Convert the JSON string back to a Plotly figure
+                                fig_dict = json.loads(plot_data["figure"])
+                                fig = go.Figure(fig_dict)
+                                
+                                # Display the figure
+                                st.plotly_chart(fig, use_container_width=True)
+                                
+                                # Add insightful description
+                                if "insight" in plot_data:
+                                    st.write(plot_data["insight"])
                     
                     elif visualization_data:
                         st.warning(f"Could not create visualizations: {visualization_data.get('message', 'Unknown error')}")
