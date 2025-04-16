@@ -15,22 +15,48 @@ from viz_agent import VizAgent
 
 # Define state type for the workflow
 class AnalysisState(TypedDict):
+    '''
+    This is a TypedDict or GraphState that defines the state of the analysis workflow.
+    '''
     df: pd.DataFrame
     analysis_result: str
     visualization_data: Optional[Dict[str, Any]]
     messages: list
 
-def create_analysis_workflow(df: pd.DataFrame):
-    
-    # Check for API key
+def get_llama_client():
+    '''
+    Get the LlamaAPI client.
+    This function retrieves the API key from the environment variables and initializes the LlamaAPI client.
+    It raises a ValueError if the API key is not found.
+    Returns:
+        LlamaAPI: An instance of the LlamaAPI client.
+    Raises:
+        ValueError: If the API key is not found in the environment variables.
+    '''
     api_key = os.getenv("LLAMA_API_KEY")
     if not api_key:
-        raise ValueError("No API Key found. Please set LLAMA_API_KEY in .env file.")
-    
-    llama = LlamaAPI(api_key)
-    
+        raise ValueError("Set LLAMA_API_KEY in .env")
+    return LlamaAPI(api_key)
+
+def create_analysis_workflow(df: pd.DataFrame):
+    '''
+    Initializes and compiles the analysis workflow using LangGraph.
+
+    This function sets up the AI analysis pipeline for a given dataset. It defines:
+    - An analysis node to generate insights using LLM
+    - A visualization suggestion node to determine relevant plots
+    - A tool node that triggers visualization tools based on LLM output
+
+    Args:
+        df (pd.DataFrame): The dataset to be analyzed and visualized.
+
+    Returns:
+        function: A function (`run_analysis`) that when called, executes the full analysis workflow
+                  and returns the results.
+    '''
+    llama = get_llama_client()
     analysis_agent = AnalysisAgent()
-    
+    visualization_agent = VizAgent()
     
     # Define the analysis node that processes the dataframe and calls the API
     def analyze_node(state: AnalysisState):
@@ -52,8 +78,15 @@ def create_analysis_workflow(df: pd.DataFrame):
         # Call API
         try:
             response = llama.run(api_request)
-            if response.status_code == 200:
-                state["analysis_result"] = response.json()["choices"][0]["message"]["content"]
+            if response.status_code == 200: 
+                reply = response.json()["choices"][0]["message"]["content"]
+                state["analysis_result"] = reply
+
+                # Append to message history
+                state["messages"].extend([
+                    HumanMessage(content=prompt),
+                    AIMessage(content=reply)
+                ])
             else:
                 state["analysis_result"] = f"❌ API Error: {response.status_code} - {response.text}"
         except Exception as e:
@@ -65,7 +98,6 @@ def create_analysis_workflow(df: pd.DataFrame):
     def suggest_plots_node(state: AnalysisState):
         """Node: Get LLM-suggested visualizations."""
         
-        visualization_agent = VizAgent()
         prompt = visualization_agent.suggest_visual_columns(state["df"])
         api_request = {
             "model": "llama3.1-70b",
@@ -131,7 +163,8 @@ def create_analysis_workflow(df: pd.DataFrame):
         result = workflow.invoke(initial_state)
         return {
             "analysis_result": result["analysis_result"],
-            "visualization_data": result["visualization_data"]
+            "visualization_data": result["visualization_data"],
+            "visualization_tools": Visualization_Tools
         }
     
     return run_analysis

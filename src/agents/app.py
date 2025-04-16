@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from dotenv import load_dotenv
 import workflow as wf
 
+from visualization_tools import ColumnInput, ColumnPairInput
 # Load environment variables
 load_dotenv()
 
@@ -47,6 +48,7 @@ def main():
                     
                     # Run the analysis workflow
                     results = analysis_runner()
+                    visualization_tools = results["visualization_tools"]
                     analysis_result = results["analysis_result"]
                     visualization_data = results["visualization_data"]
                     
@@ -58,6 +60,36 @@ def main():
                     if visualization_data and visualization_data.get("success"):
                         st.write("#### LLM Visualization Suggestions")
                         st.json(visualization_data["llm_visual_prompt_output"])
+
+                        try:
+                            tool_suggestions = json.loads(visualization_data["llm_visual_prompt_output"])
+                            tool_calls = tool_suggestions.get("tool_calls", [])
+                            visualization_data["plots"] = []
+                            
+                            for tool in tool_calls:
+                                tool_name = tool["name"]
+                                arguments = tool["arguments"]["input"]  # Get the inner input object
+                                
+                                plot_func = getattr(visualization_tools, tool_name, None)
+                                if plot_func:
+                                    try:
+                                        # Create the correct input model
+                                        if "x_column" in arguments and "y_column" in arguments:
+                                            input_model = ColumnPairInput(**arguments)
+                                        else:
+                                            input_model = ColumnInput(**arguments)
+                                        
+                                        plot_json = plot_func(input_model)
+                                        
+                                        visualization_data["plots"].append({
+                                            "title": f"{tool_name.replace('_', ' ').title()}",
+                                            "figure": plot_json,
+                                            "insight": f"Visualization created using tool: `{tool_name}`"
+                                        })
+                                    except Exception as e:
+                                        st.warning(f"Tool `{tool_name}` failed: {str(e)}")
+                        except Exception as e:
+                            st.warning(f"Failed to generate plots from LLM suggestions: {str(e)}")
                         
                         if visualization_data and visualization_data.get("plots"):
                             if len(visualization_data["plots"]) > 1:

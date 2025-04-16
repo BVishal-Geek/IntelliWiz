@@ -2,6 +2,9 @@ import pandas as pd
 import plotly.express as px
 from langchain_core.tools import tool
 from pydantic import BaseModel
+from typing import Dict, Any
+
+# ----------------- Input Models -----------------
 
 class ColumnInput(BaseModel):
     column: str
@@ -10,11 +13,13 @@ class ColumnPairInput(BaseModel):
     x_column: str
     y_column: str
 
+# ----------------- Visualization Class -----------------
+
 class VisualizationTools:
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
-    # ------------------- UNIVARIATE PLOTS -------------------
+    # ---------- Univariate Plots ----------
 
     @tool
     def histogram(self, input: ColumnInput) -> str:
@@ -50,7 +55,7 @@ class VisualizationTools:
         fig = px.violin(self.df, y=input.column, box=True, title=f'Violin Plot of {input.column}')
         return fig.to_json()
 
-    # ------------------- BIVARIATE PLOTS -------------------
+    # ---------- Bivariate Plots ----------
 
     @tool
     def scatter_plot(self, input: ColumnPairInput) -> str:
@@ -60,7 +65,7 @@ class VisualizationTools:
 
     @tool
     def line_plot(self, input: ColumnPairInput) -> str:
-        """Line plot for a numeric or datetime x-axis."""
+        """Line plot for numeric or datetime x-axis."""
         fig = px.line(self.df, x=input.x_column, y=input.y_column, title=f'Line Plot: {input.y_column} over {input.x_column}')
         return fig.to_json()
 
@@ -83,6 +88,24 @@ class VisualizationTools:
         fig = px.bar(grouped, x=input.x_column, y=input.y_column, title=f'Average {input.y_column} by {input.x_column}')
         return fig.to_json()
 
+    # ---------- New Additions ----------
+
+    @tool
+    def correlation_heatmap(self, _: Dict[str, Any]) -> str:
+        """Heatmap showing correlation between numeric columns."""
+        corr = self.df.corr(numeric_only=True)
+        fig = px.imshow(corr, text_auto=".2f", title="Correlation Heatmap")
+        return fig.to_json()
+
+    @tool
+    def stacked_bar_plot(self, input: ColumnPairInput) -> str:
+        """Stacked bar plot for two categorical columns."""
+        grouped = self.df.groupby([input.x_column, input.y_column]).size().reset_index(name='count')
+        fig = px.bar(grouped, x=input.x_column, y="count", color=input.y_column, title=f"Stacked Bar: {input.x_column} vs {input.y_column}")
+        return fig.to_json()
+
+    # ---------- Expose All Tools ----------
+
     def get_tools(self):
         return [
             self.histogram,
@@ -95,4 +118,6 @@ class VisualizationTools:
             self.box_plot_bivariate,
             self.violin_plot_bivariate,
             self.bar_grouped_plot,
+            self.correlation_heatmap,
+            self.stacked_bar_plot
         ]
