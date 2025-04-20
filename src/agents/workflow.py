@@ -9,7 +9,7 @@ import json
 import ast
 
 from analysis_agent import AnalysisAgent
-from visualization_tools import VisualizationTools
+import visualization_tools
 from viz_agent import VizAgent
 
 
@@ -95,37 +95,63 @@ def create_analysis_workflow(df: pd.DataFrame):
         return state
     
     # Define the suggest plots node
-    def suggest_plots_node(state: AnalysisState):
-        """Node: Get LLM-suggested visualizations."""
+    # def suggest_plots_node(state: AnalysisState):
+    #     """Node: Get LLM-suggested visualizations."""
         
-        prompt = visualization_agent.suggest_visual_columns(state["df"])
-        api_request = {
-            "model": "llama3.1-70b",
-            "messages": [
-                {"role": "system", "content": "You are an expert data analyst. Provide clear, actionable insights."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.5,
-            "max_tokens": 1500
-        }
+    #     prompt = visualization_agent.suggest_visual_columns(state["df"])
+    #     api_request = {
+    #         "model": "llama3.1-70b",
+    #         "messages": [
+    #             {"role": "system", "content": "You are an expert data analyst. Provide clear, actionable insights."},
+    #             {"role": "user", "content": prompt}
+    #         ],
+    #         "temperature": 0.5,
+    #         "max_tokens": 1500
+    #     }
 
+    #     try:
+    #         response = llama.run(api_request)
+    #         if response.status_code == 200:
+    #             content = response.json()["choices"][0]["message"]["content"]
+    #             state["visualization_data"] = {
+    #                 "success": True,
+    #                 "llm_visual_prompt_output": content
+    #             }
+    #             state["messages"] = [
+    #                 HumanMessage(content=prompt),
+    #                 AIMessage(content=content)
+    #             ]
+    #         else:
+    #             state["visualization_data"] = {
+    #                 "success": False,
+    #                 "message": f"❌ API Error: {response.status_code} - {response.text}"
+    #             }
+    #     except Exception as e:
+    #         state["visualization_data"] = {
+    #             "success": False,
+    #             "message": f"❌ Visualization generation failed: {str(e)}"
+    #         }
+
+    #     return state
+
+    def suggest_plots_node(state: AnalysisState):
+        """Node: Get LLM-suggested visualizations via AgentExecutor."""
         try:
-            response = llama.run(api_request)
-            if response.status_code == 200:
-                content = response.json()["choices"][0]["message"]["content"]
-                state["visualization_data"] = {
-                    "success": True,
-                    "llm_visual_prompt_output": content
-                }
-                state["messages"] = [
-                    HumanMessage(content=prompt),
-                    AIMessage(content=content)
-                ]
-            else:
-                state["visualization_data"] = {
-                    "success": False,
-                    "message": f"❌ API Error: {response.status_code} - {response.text}"
-                }
+            # Use VizAgent’s updated method that calls agent_executor.invoke()
+            
+            response = visualization_agent.suggest_visual_columns(state["df"])
+            print("📦 Raw response of response:", response)
+
+            state["visualization_data"] = {
+                "success": True,
+                "llm_visual_prompt_output": response["response"]["output"]
+            }
+
+            state["messages"] = [
+                HumanMessage(content="Suggest visual columns for this dataset."),
+                AIMessage(content=response["response"]["output"])  # already an AIMessage
+            ]
+
         except Exception as e:
             state["visualization_data"] = {
                 "success": False,
@@ -134,7 +160,7 @@ def create_analysis_workflow(df: pd.DataFrame):
 
         return state
     
-    Visualization_Tools = VisualizationTools(df)
+    tools = visualization_tools.get_all_tools()
 
     # Define the graph
     graph = StateGraph(AnalysisState)
@@ -142,7 +168,7 @@ def create_analysis_workflow(df: pd.DataFrame):
     # Add nodes
     graph.add_node("analyze_data", analyze_node)
     graph.add_node("suggest_plots", suggest_plots_node)
-    graph.add_node("visualization_tool", ToolNode(Visualization_Tools.get_tools()))
+    graph.add_node("visualization_tool", ToolNode(tools))
     
     # Define edges - sequential flow to avoid concurrent updates
     graph.add_edge(START, "analyze_data")
@@ -164,7 +190,7 @@ def create_analysis_workflow(df: pd.DataFrame):
         return {
             "analysis_result": result["analysis_result"],
             "visualization_data": result["visualization_data"],
-            "visualization_tools": Visualization_Tools
+            
         }
     
     return run_analysis
