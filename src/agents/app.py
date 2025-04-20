@@ -76,6 +76,12 @@ def main():
                     # Run the analysis workflow
                     results = analysis_runner()
                     
+                    # Store current dataframe in session state for fallback visualizations
+                    if "cleaned_df" in results.get("cleaning", {}):
+                        st.session_state["current_df"] = results["cleaning"]["cleaned_df"]
+                    else:
+                        st.session_state["current_df"] = df
+                    
                     # Display debug logs if in debug mode
                     if debug_mode and "debug_logs" in results:
                         with st.expander("🔍 Debug Logs", expanded=False):
@@ -91,20 +97,38 @@ def main():
                     display_visualizations(
                         original_viz_data, 
                         "Original Data Visualizations",
-                        debug_mode
+                        debug_mode,
+                        "original"  # Added a unique prefix for keys
                     )
                     
                     # SECTION 2: Data Cleaning Results
                     cleaning_results = results["cleaning"]
                     if cleaning_results:
                         st.write("## Data Cleaning Results")
-                        st.write(f"- Quality issues identified: {len(cleaning_results.get('quality_issues', []))}")
-                        st.write(f"- Cleaning actions performed: {len(cleaning_results.get('cleaning_actions', []))}")
                         
-                        if len(cleaning_results.get('cleaning_actions', [])) > 0:
+                        # Safely get the counts with type checking
+                        quality_issues = cleaning_results.get('quality_issues', [])
+                        cleaning_actions = cleaning_results.get('cleaning_actions', [])
+                        
+                        # Make sure these are lists before counting
+                        quality_issues_count = len(quality_issues) if isinstance(quality_issues, list) else 0
+                        cleaning_actions_count = len(cleaning_actions) if isinstance(cleaning_actions, list) else 0
+                        
+                        st.write(f"- Quality issues identified: {quality_issues_count}")
+                        st.write(f"- Cleaning actions performed: {cleaning_actions_count}")
+                        
+                        # Display top cleaning actions with type checking
+                        if isinstance(cleaning_actions, list) and len(cleaning_actions) > 0:
                             st.write("### Top Cleaning Actions:")
-                            for action in cleaning_results.get('cleaning_actions', [])[:5]:
-                                st.write(f"- {action.get('column', 'dataset')}: {action.get('description', 'N/A')}")
+                            count = 0
+                            for action in cleaning_actions:
+                                if isinstance(action, dict):
+                                    st.write(f"- {action.get('column', 'dataset')}: {action.get('description', 'N/A')}")
+                                elif isinstance(action, str):
+                                    st.write(f"- {action}")
+                                count += 1
+                                if count >= 5:
+                                    break
                         
                         # Show data shape changes 
                         if 'original_data' in cleaning_results and 'cleaned_data' in cleaning_results:
@@ -129,7 +153,8 @@ def main():
                     display_visualizations(
                         cleaned_viz_data, 
                         "Cleaned Data Visualizations",
-                        debug_mode
+                        debug_mode,
+                        "cleaned"  # Added a unique prefix for keys
                     )
                 
                 except Exception as e:
@@ -139,9 +164,15 @@ def main():
                     if debug_mode:
                         st.code(error_trace)
 
-def display_visualizations(viz_data, section_title, debug_mode=False):
+def display_visualizations(viz_data, section_title, debug_mode=False, key_prefix="viz"):
     """
     Helper function to display visualizations with error handling and debug info
+    
+    Args:
+        viz_data: Visualization data from agent
+        section_title: Title for the visualization section
+        debug_mode: Whether to show debug information
+        key_prefix: Prefix for unique Streamlit keys to avoid duplicate ID errors
     """
     if not viz_data:
         st.write(f"### {section_title}")
@@ -179,8 +210,9 @@ def display_visualizations(viz_data, section_title, debug_mode=False):
                         fig_dict = json.loads(plot_data["figure"])
                         fig = go.Figure(fig_dict)
                         
-                        # Display the figure
-                        st.plotly_chart(fig, use_container_width=True)
+                        # Display the figure with a unique key to avoid duplicate ID errors
+                        unique_key = f"{key_prefix}_multi_{i}_{plot_data.get('id', '')}"
+                        st.plotly_chart(fig, use_container_width=True, key=unique_key)
                         
                         # Add insightful description
                         if "insight" in plot_data and plot_data["insight"]:
@@ -200,8 +232,9 @@ def display_visualizations(viz_data, section_title, debug_mode=False):
                 fig_dict = json.loads(plot_data["figure"])
                 fig = go.Figure(fig_dict)
                 
-                # Display the figure
-                st.plotly_chart(fig, use_container_width=True)
+                # Display the figure with a unique key to avoid duplicate ID errors
+                unique_key = f"{key_prefix}_single_{plot_data.get('id', '')}"
+                st.plotly_chart(fig, use_container_width=True, key=unique_key)
                 
                 # Add insightful description
                 if "insight" in plot_data and plot_data["insight"]:
@@ -241,7 +274,7 @@ def display_visualizations(viz_data, section_title, debug_mode=False):
                     if len(numeric_cols) > 0:
                         col = numeric_cols[0]
                         st.write(f"Distribution of {col}")
-                        st.bar_chart(df[col])
+                        st.bar_chart(df[col], key=f"{key_prefix}_fallback_bar")
         else:
             st.info("No visualization data available")
 
