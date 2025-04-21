@@ -75,7 +75,6 @@ def main():
                     
                     # Run the analysis workflow
                     results = analysis_runner()
-                    
                     # Store current dataframe in session state for fallback visualizations
                     if "cleaned_df" in results.get("cleaning", {}):
                         st.session_state["current_df"] = results["cleaning"]["cleaned_df"]
@@ -156,7 +155,14 @@ def main():
                         debug_mode,
                         "cleaned"  # Added a unique prefix for keys
                     )
-                
+                    # Show preview of cleaned data
+                    cleaned_df = results.get("cleaned_df")
+                    if cleaned_df is not None and len(cleaned_df) > 0:
+                        st.write("## Cleaned Data Preview")
+                        st.dataframe(cleaned_df.head())
+                        st.write(f"Cleaned dataset has {len(cleaned_df)} rows and {len(cleaned_df.columns)} columns")
+                    else:
+                        st.warning("Cleaned data could not be displayed.")
                 except Exception as e:
                     st.error(f"Analysis failed: {str(e)}")
                     import traceback
@@ -199,7 +205,9 @@ def display_visualizations(viz_data, section_title, debug_mode=False, key_prefix
         
         # Create tabs for multiple visualizations
         if len(viz_data["plots"]) > 1:
-            tabs = st.tabs([f"Visualization {i+1}" for i in range(len(viz_data["plots"]))])
+
+            tab_titles = [plot_data.get("title", f"Visualization {i+1}") for i, plot_data in enumerate(viz_data["plots"])]
+            tabs = st.tabs(tab_titles)
             
             for i, (tab, plot_data) in enumerate(zip(tabs, viz_data["plots"])):
                 with tab:
