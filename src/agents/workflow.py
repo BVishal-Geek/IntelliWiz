@@ -21,19 +21,18 @@ class AnalysisState(TypedDict):
     current_df: pd.DataFrame                   # Current working dataframe
     debug_logs: List[str]                      # Debug log messages
 
-def create_analysis_workflow(df: pd.DataFrame, debug_mode=True):
+def create_analysis_workflow(df: pd.DataFrame, debug_mode=True, api_key=None):
     
-    # Check for API key
-    api_key = os.getenv("LLAMA_API_KEY")
+    # Use provided API key instead of environment variable
     if not api_key:
-        raise ValueError("No API Key found. Please set LLAMA_API_KEY in .env file.")
+        raise ValueError("No API Key provided. Please enter your LLAMA API Key.")
     
     llama = LlamaAPI(api_key)
     
     # Initialize all agents - use the enhanced visualization agent
     cleaning_agent = DataCleaningAgent()
     analysis_agent = AnalysisAgent()
-    visualization_agent = VisualizationAgent(debug=debug_mode)
+    visualization_agent = VisualizationAgent(debug=debug_mode, api_key=api_key)
     
     # Helper function to add debug logs
     def add_debug_log(state, message):
