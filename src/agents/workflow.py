@@ -339,7 +339,8 @@ The data has been cleaned with the following actions:
                 "result": result["cleaned_analysis_result"],
                 "visualizations": result["cleaned_visualization_data"]
             },
-            "debug_logs": result.get("debug_logs", [])
+            "debug_logs": result.get("debug_logs", []),
+            "cleaned_df": result.get("cleaned_df")
         }
     
     return run_analysis
