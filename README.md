@@ -1,120 +1,117 @@
-# AI-Powered Data Analysis using Multi-Agent Model
+# IntelliWiz: AI-Powered Data Analysis Platform
 
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Problem Statement](#problem-statement)
-3. [Proposed Solution](#proposed-solution)
-4. [Technology Stack](#technology-stack)
-5. [Project Structure](#project-structure)
-6. [Setup Instructions](#setup-instructions)
-
----
-
-## Project Overview
-
-The goal of this project is to develop an AI-powered multi-agent system capable of performing automated data preprocessing, exploratory data analysis (EDA), and integrating digital twin technology. The system will provide intelligent insights and actionable recommendations to support business decision-making.
-
----
+IntelliWiz is a smart platform that automates data cleaning and visualizations using AI agents. It helps data analysts save time by automating the most tedious parts of data analysis.
 
 ## Problem Statement
 
-In today's data-driven world, businesses struggle with efficiently handling and analyzing large volumes of data. Traditional data analysis methods require manual effort and domain expertise, leading to inefficiencies and potential errors. Furthermore, the integration of digital twin technology for real-time scenario simulation remains a challenge due to the complexity of data synchronization and processing.
+- 80% of a data analyst's time is spent on data cleaning, preparation, and exploratory data analysis
+- Manual data cleaning is tedious, error-prone, and doesn't scale
+- Existing tools often require manual intervention at multiple stages
 
-**Challenges to address:**
-- Inefficient and error-prone manual data preprocessing.
-- Lack of automated exploratory data analysis (EDA) with insights.
-- Limited integration of digital twin technology for predictive analytics.
-- Challenges in scaling solutions to accommodate large datasets.
+## Solution
 
-This project aims to bridge these gaps by leveraging AI-driven multi-agent systems to automate the data analysis pipeline and incorporate digital twins for real-time monitoring and optimization.
+IntelliWiz leverages AI agents to automate:
+- Data profiling and analysis
+- Intelligent data cleaning and preprocessing
+- Visualization selection and generation
+- Before/after comparisons of cleaned data
 
----
+## 🔗 Live Demo
 
-## Proposed Solution
+- Main Application: [https://intelliwiz.streamlit.app/](https://intelliwiz.streamlit.app/)
+- Report Application: [https://intelliwiz-report.streamlit.app/](https://intelliwiz-report.streamlit.app/)
 
-Our solution introduces an **AI-Powered Data Analysis and Digital Twin Integration Platform**, featuring:
+## 🔍 Features
 
-1. **AI Agents for Automation:**
-   - Data preprocessing: Cleaning, normalization, feature engineering.
-   - EDA: Generating statistical summaries and visualizations.
-   - Digital twin: Simulating and optimizing real-world scenarios.
-   - Decision-making: Providing actionable insights based on analysis.
+- **AI-powered data cleaning** - Automatically handles missing values, outliers, and data type issues
+- **Intelligent visualization generation** - Creates relevant visualizations based on dataset characteristics
+- **Comparative analysis** - Shows before/after cleaning analysis to understand data quality improvements
+- **Debug mode** - Provides detailed logs and insights into the AI decision-making process
 
-2. **Scalable and Modular Architecture:**
-   - Built using Python, PyTorch, and Streamlit for easy deployment.
-   - Modularized components allowing flexibility and scalability.
-   - Cloud integration for real-time data processing and analytics.
+## 🛠️ Technologies Used
 
-3. **User-Friendly Web Interface:**
-   - Interactive dashboards for visual exploration.
-   - Upload and analyze datasets with ease.
-   - Scenario simulations through digital twin models.
+- **Frontend:** Streamlit (Python)
+- **Data Processing:** Pandas, NumPy
+- **AI Integration:** Llama API (Llama 3.1)
+- **Visualization:** Plotly Express, Graph Objects
+- **Workflow Orchestration:** LangGraph
 
----
+## 📋 Components
 
-## Technology Stack
+- **VisualizationAgent**: Creates meaningful visualizations from dataframes
+- **DataCleaningAgent**: Handles data preprocessing including missing values, outliers, type conversion
+- **AnalysisAgent**: Prepares comprehensive prompts for data analysis
+- **LangGraph Workflow**: Orchestrates the entire process in a defined sequence
 
-The project will leverage the following technologies:
+## 🚀 Installation
 
-- **Programming Languages:** Python
-- **Frameworks & Libraries:** 
-  - Data Processing: Pandas, NumPy
-  - Machine Learning: PyTorch, Scikit-learn
-  - Visualization: Matplotlib, Seaborn, Plotly
-  - Web Application: Streamlit, FastAPI
-- **Infrastructure:** Docker
-- **Version Control:** Git, GitHub
-- **CI/CD:** GitHub Actions
-
----
-
-## Project Structure
-
+1. Clone the repository:
 ```bash
-├── src/                         # Source code
-│   ├── agents/                   # AI agents for different tasks
-│   │   ├── preprocessing_agent.py
-│   │   ├── eda_agent.py
-│   │   ├── digital_twin_agent.py
-│   │   └── decision_agent.py
-│   ├── utils/                     # Utility functions
-│   ├── app.py                      # Main Streamlit app
-│   ├── api/                        # API endpoints (FastAPI)
-│   └── __init__.py
-├── data/                        # Sample datasets
-│   ├── raw/                       # Raw data before processing
-│   ├── processed/                  # Cleaned data ready for analysis
-├── experiments/                  # Testing/Experimenting new code trails
-├── notebooks/                    # Jupyter Notebooks for analysis
-├── tests/                        # Unit tests for agents
-├── docs/                         # Documentation
-├── requirements.txt              # Required Python packages
-├── Dockerfile                    # Docker containerization
-├── .gitignore                     # Ignore unnecessary files
-├── README.md                      # Project overview and documentation
-└── LICENSE                        # License file
+git clone https://github.com/BVishal-Geek/IntelliWiz.git
+cd IntelliWiz
 ```
-## Setup Instructions
-Follow these steps to set up the project locally:
 
-Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
-```
-Create and activate a virtual environment:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate   # On Windows use `venv\Scripts\activate`
-```
-Install dependencies:
-
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-Run the application:
+
+3. Run the application:
 ```bash
-streamlit run src/app.py
+streamlit run app.py
 ```
+
+4. Enter your Llama API key in the application interface when prompted
+
+## 💡 How It Works
+
+1. **Data Ingestion**: Upload CSV files via drag-and-drop
+2. **Original Data Analysis**: AI agents profile and analyze the original data
+3. **Original Data Visualization**: AI selects and creates appropriate visualizations
+4. **Data Cleaning**: AI identifies and fixes data quality issues
+5. **Cleaned Data Analysis and Visualization**: AI analyzes and visualizes the improved data
+6. **Comparative Analysis**: Compare before/after results to see improvements
+
+## 📊 Workflow Architecture
+
+The application uses LangGraph to orchestrate the workflow:
+![IntelliWiz LangGraph Workflow](workflow_diagram.png)
+
+1. `analyze_original_data_node` - Run AI-powered analysis on the original dataset
+2. `visualize_original_data_node` - Create visualizations based on original dataset
+3. `clean_data_node` - Clean the dataset using AI-powered data cleaning
+4. `visualize_cleaned_data_node` - Create visualizations for cleaned dataset
+5. `analyze_cleaned_data_node` - Run AI-powered analysis on cleaned dataset
+
+## 🔮 Future Extensions
+
+- **Human-in-the-Loop**: Implement feedback mechanisms allowing users to validate, correct, and refine AI-driven decisions
+- **Memory-Enhanced Workflow**: Add persistent memory capabilities to retain context across sessions
+- **LLM-Agnostic Architecture**: Refactor the system to work with multiple LLM providers
+- **Agentic AI for Data Engineering and ML Modeling**: Develop specialized AI agents for more advanced tasks
+
+## 👨‍💻 Contributors
+
+- Yash Kattimani
+- Swathi Murali Srinivasan
+- Vishal Bakshi
+
+## 📝 Repository
+
+GitHub: [https://github.com/BVishal-Geek/IntelliWiz](https://github.com/BVishal-Geek/IntelliWiz)
+
+---
+
+*Note: This project requires a Llama API key to function. You'll need to enter your API key in the application interface after launching the app.*
+
+Citations:
+[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/89750847-9847-44fa-8023-5072b53df076/AI-Powered-Data-Analysis-Platform_-Comprehensive-Documentation-2.pptx
+[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/b3f8c1f7-92b8-4ca3-bd8a-1cb36490356e/analysis_agent.py
+[3] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/584152eb-b90a-46eb-a55d-ab9c17875cfc/visualization_agent.py
+[4] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/0cd5c557-5bdc-456d-a49f-cbabb937602d/workflow.py
+[5] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/a0ad170b-d3b4-4910-9b41-664f88d4ae1b/app.py
+[6] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/9897490d-c03f-43d4-b262-47795ab67ba2/ai_visualization_agent.py
+[7] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/ccb4390e-70a4-4642-8cc5-fc0e980ed659/data_cleaning_agent.py
+
+---
+Answer from Perplexity: pplx.ai/share
