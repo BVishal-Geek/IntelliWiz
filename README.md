@@ -75,7 +75,9 @@ streamlit run app.py
 ## 📊 Workflow Architecture
 
 The application uses LangGraph to orchestrate the workflow:
-![IntelliWiz LangGraph Workflow](workflow_diagram.png)
+<br>
+<br>
+<img src="workflow_diagram.png" width="400" height="50%" alt="IntelliWiz LangGraph Workflow">
 
 1. `analyze_original_data_node` - Run AI-powered analysis on the original dataset
 2. `visualize_original_data_node` - Create visualizations based on original dataset
@@ -103,15 +105,3 @@ GitHub: [https://github.com/BVishal-Geek/IntelliWiz](https://github.com/BVishal-
 ---
 
 *Note: This project requires a Llama API key to function. You'll need to enter your API key in the application interface after launching the app.*
-
-Citations:
-[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/89750847-9847-44fa-8023-5072b53df076/AI-Powered-Data-Analysis-Platform_-Comprehensive-Documentation-2.pptx
-[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/b3f8c1f7-92b8-4ca3-bd8a-1cb36490356e/analysis_agent.py
-[3] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/584152eb-b90a-46eb-a55d-ab9c17875cfc/visualization_agent.py
-[4] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/0cd5c557-5bdc-456d-a49f-cbabb937602d/workflow.py
-[5] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/a0ad170b-d3b4-4910-9b41-664f88d4ae1b/app.py
-[6] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/9897490d-c03f-43d4-b262-47795ab67ba2/ai_visualization_agent.py
-[7] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/39291651/ccb4390e-70a4-4642-8cc5-fc0e980ed659/data_cleaning_agent.py
-
----
-Answer from Perplexity: pplx.ai/share
