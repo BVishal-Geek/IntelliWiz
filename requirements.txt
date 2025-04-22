@@ -16,3 +16,4 @@ llamaapi
 python-dotenv
 langchain-community
 fpdf
+plotly
