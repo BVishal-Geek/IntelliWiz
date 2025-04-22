@@ -3,10 +3,7 @@ import pandas as pd
 import os
 import json
 import plotly.graph_objects as go
-from dotenv import load_dotenv
 from workflow import create_analysis_workflow
-
-load_dotenv()
 
 @st.cache_data
 def load_data(file):
@@ -21,12 +18,22 @@ def main():
     st.sidebar.title("Debug Options")
     debug_mode = st.sidebar.checkbox("Enable Debug Mode", value=True)
 
+    # API Key input in sidebar with password masking
+    st.sidebar.title("API Configuration")
+    api_key = st.sidebar.text_input("Enter LLAMA API Key", type="password")
+    
+    # Store API key in session state if not already there
+    if "api_key" not in st.session_state and api_key:
+        st.session_state["api_key"] = ""
+    elif api_key:  # Update if user changes it
+        st.session_state["api_key"] = api_key
+    
     # Check API key
-    api_key = os.getenv("LLAMA_API_KEY")
     if not api_key:
-        st.sidebar.error("❌ No API Key found. Please check your .env file.")
+        st.sidebar.warning("⚠️ Please enter your LLAMA API Key to proceed")
+        st.info("To use this application, you need to provide your LLAMA API Key in the sidebar.")
         st.stop()
-    st.sidebar.success("✅ API Key loaded")
+    st.sidebar.success("✅ API Key entered")
     
     # File uploader
     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
@@ -71,7 +78,7 @@ def main():
             with st.spinner("Analyzing data with AI..."):
                 try:
                     # Create the analysis workflow with the dataframe and debug mode
-                    analysis_runner = create_analysis_workflow(df, debug_mode=debug_mode)
+                    analysis_runner = create_analysis_workflow(df, debug_mode=debug_mode, api_key=st.session_state["api_key"])
                     
                     # Run the analysis workflow
                     results = analysis_runner()

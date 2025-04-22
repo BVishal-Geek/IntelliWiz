@@ -17,9 +17,9 @@ class VisualizationAgent:
     recommendations based on data characteristics.
     """
     
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, api_key=None):
         """Initialize the visualization agent with API client"""
-        self.api_key = os.getenv("LLAMA_API_KEY")
+        self.api_key = api_key
         self.debug = debug
         if not self.api_key:
             raise ValueError("No API Key found. Please set LLAMA_API_KEY in .env file.")
